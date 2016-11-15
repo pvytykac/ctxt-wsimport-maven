@@ -1,8 +1,0 @@
-uk\co\txttools\connectors\soap\messaging\InboxMessageTest.class
-uk\co\txttools\connectors\soap\addressbook\AddressbookTest.class
-uk\co\txttools\connectors\soap\messaging\ReportsTest.class
-uk\co\txttools\connectors\soap\SOAPClient.class
-uk\co\txttools\connectors\soap\ClientConstants.class
-uk\co\txttools\connectors\soap\WSSecuritySoapHandler.class
-uk\co\txttools\connectors\soap\messaging\MessageTest.class
-uk\co\txttools\connectors\soap\messaging\StatusTest.class

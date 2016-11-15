@@ -1,8 +1,4 @@
-.gradle/
 .idea/
-build/
-gradle/
-gradlew
-gradlew.bat
+target/
 *.iml
 src/main/java/uk/
