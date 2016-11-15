@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+                  xmlns:schema="http://www.txttools.co.uk/connectors/soap/messaging/schemas"
+                  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+                  xmlns:tns="http://www.txttools.co.uk/connectors/soap/messaging/definitions"
+                  targetNamespace="http://www.txttools.co.uk/connectors/soap/messaging/definitions">
+    <wsdl:types>
+        <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                   xmlns:txttoolsMessaging="http://www.txttools.co.uk/connectors/soap/messaging/schemas"
+                   elementFormDefault="qualified"
+                   targetNamespace="http://www.txttools.co.uk/connectors/soap/messaging/schemas">
+
+            <!-- send message request -->
+            <xs:element name="MessageRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element maxOccurs="unbounded" minOccurs="1" name="Message"
+                                    type="txttoolsMessaging:MessageType"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:element name="MessageResponse" type="txttoolsMessaging:StatusResponse"/>
+
+            <xs:complexType name="MessageType">
+                <xs:sequence>
+                    <xs:element default="false" minOccurs="0" name="SuppressUnicode" type="xs:boolean"/>
+
+                    <xs:element maxOccurs="unbounded" minOccurs="1" name="Recipient"
+                                type="txttoolsMessaging:PhoneNumberType"/>
+
+                    <xs:element minOccurs="1" name="MessageText">
+                        <xs:simpleType>
+                            <xs:restriction base="xs:string">
+                                <xs:whiteSpace value="preserve"/>
+                            </xs:restriction>
+                        </xs:simpleType>
+                    </xs:element>
+
+                    <!-- max 11 if alpha, but 16 if an internationalized phone number (including '+')  -->
+                    <xs:element minOccurs="0" name="Source">
+                        <xs:simpleType>
+                            <xs:restriction base="xs:string">
+                                <xs:minLength value="1"/>
+                                <xs:maxLength value="16"/>
+                            </xs:restriction>
+                        </xs:simpleType>
+                    </xs:element>
+
+                    <!-- future send time yyyy-MM-dd HH:mm format. now if not included or in the past-->
+                    <xs:element minOccurs="0" name="SendTime" type="xs:dateTime"/>
+
+                    <!-- TTL in minutes. Will be 24 hours if not included -->
+                    <!-- This does not work, but the tag remains valid to avoid people's existing soap messages from failing-->
+                    <xs:element minOccurs="0" name="TTL">
+                        <xs:simpleType>
+                            <xs:restriction base="xs:positiveInteger">
+                                <xs:minInclusive value="15"/>
+                                <xs:maxInclusive value="518400"/>
+                            </xs:restriction>
+                        </xs:simpleType>
+                    </xs:element>
+
+                    <!-- Binary or Hex header for UDH setting, if included MessageText must also be in binary or hex -->
+                    <xs:element minOccurs="0" name="Header">
+                        <xs:simpleType>
+                            <xs:restriction base="xs:string">
+                                <xs:length value="20"/>
+                            </xs:restriction>
+                        </xs:simpleType>
+                    </xs:element>
+                </xs:sequence>
+            </xs:complexType>
+
+            <xs:simpleType name="PhoneNumberType">
+                <xs:restriction base="xs:string">
+                    <xs:pattern
+                            value="((\+[1-9]\d{0,2}\s?)(\d{4}\s?\d{3}\s?\d{3}|\d{3}\s?\d{3}\s?\d{4}|\d{2}\s?\d{4}\s?\d{4})\d{0,2})|\(?0((\d{4}\)?\s?\d{3}\s?\d{3})|(\d{3}\)?\s?\d{3}\s?\d{4})|(\d{2}\)?\s?\d{4}\s?\d{4}))"/>
+                </xs:restriction>
+            </xs:simpleType>
+
+            <!-- Status request -->
+            <xs:element name="StatusRequest">
+                <xs:complexType>
+                    <xs:all>
+                        <xs:element minOccurs="1" name="Ticket" type="txttoolsMessaging:TicketType"/>
+                    </xs:all>
+                </xs:complexType>
+            </xs:element>
+            <xs:complexType name="TicketType">
+                <xs:sequence>
+                    <xs:element maxOccurs="unbounded" name="TicketNumber" type="xs:positiveInteger"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <!-- inbox message request number of new messages to return, 0 return all new messages -->
+            <xs:element name="InboxMessageRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" name="MaxReturn" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+            <!-- inbox message response -->
+            <xs:element name="InboxMessageResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element maxOccurs="unbounded" name="InboxMessageResponseType"
+                                    type="txttoolsMessaging:InboxMessageResponseType"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:complexType name="InboxMessageResponseType">
+                <xs:sequence>
+                    <xs:element name="Source" type="xs:string"/>
+                    <xs:element name="Content" type="xs:string"/>
+                    <xs:element name="Destination" type="xs:string"/>
+                    <xs:element name="DeliveryTime" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <!-- send message response -->
+            <xs:element name="StatusResponse" type="txttoolsMessaging:StatusResponse"/>
+
+            <xs:complexType name="StatusResponse">
+                <xs:sequence>
+                    <xs:element maxOccurs="unbounded" name="StatusResponseType"
+                                type="txttoolsMessaging:StatusResponseType"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <xs:complexType name="StatusResponseType">
+                <xs:sequence>
+                    <xs:element name="Recipient" type="xs:string"/>
+                    <xs:element name="Ticket" type="xs:positiveInteger"/>
+                    <xs:element name="Status">
+                        <xs:simpleType>
+                            <xs:restriction base="xs:integer">
+                                <xs:minInclusive value="0"/>
+                                <xs:maxInclusive value="6"/>
+                            </xs:restriction>
+                        </xs:simpleType>
+                    </xs:element>
+                    <xs:element name="StatusMessage" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+
+            <!-- stats report request -->
+            <xs:element name="ReportsRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="SubUser">
+                            <xs:simpleType>
+                                <xs:restriction base="xs:positiveInteger"/>
+                            </xs:simpleType>
+                        </xs:element>
+                        <xs:element minOccurs="1" name="StartDate" type="txttoolsMessaging:ReportDate"/>
+                        <xs:element minOccurs="1" name="EndDate" type="txttoolsMessaging:ReportDate"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:complexType name="ReportDate">
+                <xs:sequence>
+                    <xs:element name="dd">
+                        <xs:simpleType>
+                            <xs:restriction base="xs:positiveInteger">
+                                <xs:maxInclusive value="31"/>
+                            </xs:restriction>
+                        </xs:simpleType>
+                    </xs:element>
+                    <xs:element name="mm">
+                        <xs:simpleType>
+                            <xs:restriction base="xs:positiveInteger">
+                                <xs:maxInclusive value="12"/>
+                            </xs:restriction>
+                        </xs:simpleType>
+                    </xs:element>
+                    <xs:element name="YYYY">
+                        <xs:simpleType>
+                            <xs:restriction base="xs:positiveInteger">
+                                <xs:minInclusive value="2000"/>
+                                <xs:maxInclusive value="2100"/>
+                            </xs:restriction>
+                        </xs:simpleType>
+                    </xs:element>
+                </xs:sequence>
+            </xs:complexType>
+
+            <!-- reports response -->
+            <xs:element name="ReportResponse" type="txttoolsMessaging:ReportResponseType"/>
+            <!-- incorrect, but kept for backward compatibility -->
+            <xs:element name="ReportsResponse" type="txttoolsMessaging:ReportTotalsResponseType"/>
+            <xs:element name="Totals" type="txttoolsMessaging:ReportTotalsResponseType"/>
+
+            <xs:complexType name="ReportResponseType">
+                <xs:all>
+                    <xs:element name="Totals" type="txttoolsMessaging:ReportTotalsResponseType"/>
+                </xs:all>
+            </xs:complexType>
+
+            <xs:complexType name="ReportTotalsResponseType">
+                <xs:sequence>
+                    <xs:element name="Red" type="xs:integer"/>
+                    <xs:element name="Amber" type="xs:integer"/>
+                    <xs:element name="Green" type="xs:integer"/>
+                    <xs:element name="Total" type="xs:integer"/>
+                </xs:sequence>
+            </xs:complexType>
+        </xs:schema>
+    </wsdl:types>
+    <wsdl:message name="MessageRequest">
+        <wsdl:part element="schema:MessageRequest" name="MessageRequest">
+        </wsdl:part>
+    </wsdl:message>
+    <wsdl:message name="ReportsRequest">
+        <wsdl:part element="schema:ReportsRequest" name="ReportsRequest">
+        </wsdl:part>
+    </wsdl:message>
+    <wsdl:message name="MessageResponse">
+        <wsdl:part element="schema:MessageResponse" name="MessageResponse">
+        </wsdl:part>
+    </wsdl:message>
+    <wsdl:message name="ReportsResponse">
+        <wsdl:part element="schema:ReportsResponse" name="ReportsResponse">
+        </wsdl:part>
+    </wsdl:message>
+    <wsdl:message name="StatusResponse">
+        <wsdl:part element="schema:StatusResponse" name="StatusResponse">
+        </wsdl:part>
+    </wsdl:message>
+    <wsdl:message name="InboxMessageResponse">
+        <wsdl:part element="schema:InboxMessageResponse" name="InboxMessageResponse">
+        </wsdl:part>
+    </wsdl:message>
+    <wsdl:message name="InboxMessageRequest">
+        <wsdl:part element="schema:InboxMessageRequest" name="InboxMessageRequest">
+        </wsdl:part>
+    </wsdl:message>
+    <wsdl:message name="ReportResponse">
+        <wsdl:part element="schema:ReportResponse" name="ReportResponse">
+        </wsdl:part>
+    </wsdl:message>
+    <wsdl:message name="StatusRequest">
+        <wsdl:part element="schema:StatusRequest" name="StatusRequest">
+        </wsdl:part>
+    </wsdl:message>
+    <wsdl:portType name="TxttoolsMessagingService">
+        <wsdl:operation name="Message">
+            <wsdl:input message="tns:MessageRequest" name="MessageRequest">
+            </wsdl:input>
+            <wsdl:output message="tns:MessageResponse" name="MessageResponse">
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="Reports">
+            <wsdl:input message="tns:ReportsRequest" name="ReportsRequest">
+            </wsdl:input>
+            <wsdl:output message="tns:ReportsResponse" name="ReportsResponse">
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="InboxMessage">
+            <wsdl:input message="tns:InboxMessageRequest" name="InboxMessageRequest">
+            </wsdl:input>
+            <wsdl:output message="tns:InboxMessageResponse" name="InboxMessageResponse">
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="Status">
+            <wsdl:input message="tns:StatusRequest" name="StatusRequest">
+            </wsdl:input>
+            <wsdl:output message="tns:StatusResponse" name="StatusResponse">
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:portType>
+    <wsdl:binding name="TxttoolsMessagingServiceBinding" type="tns:TxttoolsMessagingService">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <wsdl:operation name="Message">
+            <soap:operation soapAction=""/>
+            <wsdl:input name="MessageRequest">
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output name="MessageResponse">
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="Reports">
+            <soap:operation soapAction=""/>
+            <wsdl:input name="ReportsRequest">
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output name="ReportsResponse">
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="InboxMessage">
+            <soap:operation soapAction=""/>
+            <wsdl:input name="InboxMessageRequest">
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output name="InboxMessageResponse">
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="Status">
+            <soap:operation soapAction=""/>
+            <wsdl:input name="StatusRequest">
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output name="StatusResponse">
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:service name="TxttoolsMessagingServiceService">
+        <wsdl:port binding="tns:TxttoolsMessagingServiceBinding" name="TxttoolsMessagingServicePort">
+            <soap:address location="http://www.txttools.co.uk/connectors/soap/messaging"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>
